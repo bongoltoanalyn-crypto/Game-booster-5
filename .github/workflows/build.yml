@@ -29,19 +29,30 @@ jobs:
           for f in *.zip; do [ -e "$f" ] && unzip -o "$f"; done
           for f in *.7z; do [ -e "$f" ] && 7z x -y "$f"; done
           ls -R | head -80
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
       - name: Locate Gradle project
         id: locate
         run: |
-          G=$(find . -name gradlew -not -path './.github/*' | head -n 1)
-          if [ -z "$G" ]; then echo "gradlew not found"; exit 1; fi
-          echo "dir=$(dirname "$G")" >> "$GITHUB_OUTPUT"
+          S=$(find . \( -name settings.gradle -o -name settings.gradle.kts \) -not -path './.github/*' | head -n 1)
+          if [ -z "$S" ]; then
+            echo "Walang settings.gradle. Laman ng repo:"
+            find . -not -path './.git/*' | head -100
+            exit 1
+          fi
+          echo "dir=$(dirname "$S")" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
         working-directory: ${{ steps.locate.outputs.dir }}
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace --no-daemon
+          else
+            gradle assembleDebug --stacktrace --no-daemon
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
