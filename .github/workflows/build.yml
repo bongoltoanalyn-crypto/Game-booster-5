@@ -31,7 +31,7 @@ jobs:
           ls -R | head -80
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
+              gradle-version: '8.13'
 
       - name: Locate Gradle project
         id: locate
